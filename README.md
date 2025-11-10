@@ -41,6 +41,6 @@ The project monitors temperature and humidity and controls two simulated actuato
 ---
 
 ## Next Steps
--[ ] Add motion sensor to Arduino JSON payload.
--[ ] Add InfluxDB + Grafana for live visualization.
--[ ] Secure MQTT with passwords or TLS.
+- [ ] Add motion sensor to Arduino JSON payload.
+- [ ] Add InfluxDB + Grafana for live visualization.
+- [ ] Secure MQTT with passwords or TLS.
