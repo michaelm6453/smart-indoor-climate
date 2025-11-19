@@ -8,19 +8,7 @@ Arduino → Pi → MQTT → VM → InfluxDB → Grafana
 
 ## 1. Project Structure
 
-smart-indoor-climate/
-│
-├── arduino/
-│ └── dht11_sender.ino
-│
-├── raspberrypi/
-│ └── publisher.py
-│
-├── vm/
-│ └── subscriber_control.py
-│
-└── grafana/
-└── current_dashboard.md
+Fix later... just put folders and files...
 
 ---
 
@@ -110,8 +98,3 @@ The dashboard includes:
 - [ ] Add actuators such as a fan or LED controlled by MQTT
 - [ ] Add Grafana alerts for high temperatures or humidity
 - [ ] Improve documentation and diagrams
-
-## Next Steps
-- [ ] Add motion sensor to Arduino JSON payload.
-- [ ] Add InfluxDB + Grafana for live visualization.
-- [ ] Secure MQTT with passwords or TLS.
