@@ -1,3 +1,4 @@
+// DHT11 sensor sender for Arduino, sends temperature and humidity as JSON over Serial
 #include <DHT.h>
 #define DHTPIN 2
 #define DHTTYPE DHT11
