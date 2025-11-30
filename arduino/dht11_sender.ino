@@ -41,5 +41,5 @@ void loop() {
   Serial.println("}");
 
   // Delay it to reduce DB interference
-  delay(5000);   // 5 seconds
+  delay(5000); // 5 seconds
 }
