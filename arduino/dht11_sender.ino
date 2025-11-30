@@ -1,56 +1,45 @@
 #include <DHT.h>
 
-// ------------------------
-// PIN DEFINITIONS
-// ------------------------
-#define PIR_PIN 4        // PIR output on D4
-#define DHTPIN 2         // DHT11 data pin
+#define DHTPIN 2 // DHT sensor OUT pin
 #define DHTTYPE DHT11
+#define PIR_PIN 4  // PIR sensor OUT pin
 
 DHT dht(DHTPIN, DHTTYPE);
-
-int lastMotionState = LOW;
 
 void setup() {
   Serial.begin(9600);
 
   pinMode(PIR_PIN, INPUT);
 
-  Serial.println("Initializing sensors...");
-  delay(5000); // to get motion sensor ready
+  // Give PIR time to stabilize
+  delay(5000);
+
   dht.begin();
 }
 
 void loop() {
-
-  // -------- PIR READING --------
+  // Read PIR: HIGH = motion detected
   int motion = digitalRead(PIR_PIN);
-  String motionText;
 
-  if (motion == HIGH) {
-    motionText = "motion detected";
-  } else {
-    motionText = "no motion";
-  }
-
-  // -------- DHT11 READING --------
+  // Read DHT11 temperature + humidity
   float h = dht.readHumidity();
   float t = dht.readTemperature();
 
+  // DHT occasionally fails, skip this cycle
   if (isnan(h) || isnan(t)) {
-    Serial.println("Sensor error");
     delay(1000);
     return;
   }
 
-  // -------- JSON OUTPUT --------
+  // Send clean JSON that the Pi parses easily
   Serial.print("{\"temp\":");
   Serial.print(t);
-  Serial.print(",\"humidity\":");
+  Serial.print(",\"humid\":");
   Serial.print(h);
-  Serial.print(",\"");
-  Serial.print(motionText);
-  Serial.println("\"}");
+  Serial.print(",\"motion\":");
+  Serial.print(motion);
+  Serial.println("}");
 
-  delay(1000);
+  // Delay it to reduce DB interference
+  delay(5000);   // 5 seconds
 }
