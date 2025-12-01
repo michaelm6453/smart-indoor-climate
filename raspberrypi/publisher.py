@@ -1,47 +1,42 @@
 #!/usr/bin/env python3
 import serial
-import time
 import json
+import time
 import paho.mqtt.client as mqtt
 
+# USB connection to Arduino
 SERIAL_PORT = "/dev/ttyACM0"
 BAUD = 9600
 
-# Pi is running the MQTT broker locally
+# MQTT broker running on the Pi
 BROKER = "localhost"
-TOPIC = "lab4_sensor_data"
+TOPIC = "iot_final_project"
 
-# Open serial connection to Arduino (JSON lines from DHT11)
+# Open serial port
 ser = serial.Serial(SERIAL_PORT, BAUD, timeout=1)
 
-# MQTT client setup
+# MQTT client with username/password auth
 client = mqtt.Client()
+client.username_pw_set("student", "iot123")
 client.connect(BROKER, 1883, 60)
 
-print(f"Publishing Arduino JSON data from {SERIAL_PORT} to topic '{TOPIC}'")
+print(f"Publishing sensor data on '{TOPIC}'")
 
-try:
-    while True:
-        raw = ser.readline().decode(errors="ignore").strip()
-        if not raw:
-            continue
+while True:
+    raw = ser.readline().decode(errors="ignore").strip()
+    if not raw:
+        continue
 
-        # Try to parse JSON from Arduino, e.g. {"temp":27.6,"humid":33.0}
-        try:
-            data = json.loads(raw)
+    try:
+        # JSON coming from Arduino
+        data = json.loads(raw)
 
-            if "temp" in data and "humid" in data:
-                payload = json.dumps(data)
-                client.publish(TOPIC, payload)
-                print("PUB:", payload)
+        # QoS0 since we are submitting lots of sensor data and can afford to lose some
+        client.publish(TOPIC, json.dumps(data), qos=0)
+        print("PUB:", data)
 
-        except json.JSONDecodeError:
-            # Ignore partial or malformed lines
-            pass
+    except json.JSONDecodeError:
+        # Ignore incomplete lines
+        pass
 
-        time.sleep(0.1)
-
-except KeyboardInterrupt:
-    print("Stopped by user.")
-    ser.close()
-    client.disconnect()
+    time.sleep(0.1)
