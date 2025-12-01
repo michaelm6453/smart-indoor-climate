@@ -8,8 +8,10 @@ Arduino → Pi → MQTT → VM → InfluxDB → Grafana
 
 ## 1. Project Structure
 
-Fix later... just put folders and files...
+### Diagram of System
 <img width="540" height="1052" alt="Diagram1IoT" src="https://github.com/user-attachments/assets/314b1c1c-fa3d-4d51-9de7-1742c7640d50" />
+<br>
+### Data Flow
 <img width="1681" height="369" alt="EndToEndFlowIoT" src="https://github.com/user-attachments/assets/ecc37d3e-14d1-493d-9cd7-dc1c6ff58262" />
 
 ---
@@ -76,6 +78,7 @@ python3 vm/subscriber_control.py
 ```
 
 This script listens for incoming MQTT data and writes each reading into the climate database under the dht11 measurement.
+<img width="808" height="351" alt="actuator and subscriber control" src="https://github.com/user-attachments/assets/b87768f9-76c3-486d-b671-8603efb4ade5" />
 
 ---
 
@@ -92,11 +95,12 @@ The dashboard includes:
 - Current humidity card
 - Real-time line graph with thresholds
 - Data sourced from InfluxDB (InfluxQL)
+<img width="2225" height="596" alt="Grafana Output" src="https://github.com/user-attachments/assets/0cafdbc4-fffd-45dc-b4a5-4ca5dcbafe90" />
 
 ---
 
 ## 6. Future Additions
-- [ ] Add motion sensor readings to the Arduino JSON payload
-- [ ] Add actuators such as a fan or LED controlled by MQTT
-- [ ] Add Grafana alerts for high temperatures or humidity
-- [ ] Improve documentation and diagrams
+- [x] Add motion sensor readings to the Arduino JSON payload
+- [x] Add actuators such as a fan or LED controlled by MQTT
+- [x] Add Grafana alerts for high temperatures or humidity
+- [x] Improve documentation and diagrams
