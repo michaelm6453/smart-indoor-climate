@@ -9,6 +9,8 @@ Arduino → Pi → MQTT → VM → InfluxDB → Grafana
 ## 1. Project Structure
 
 Fix later... just put folders and files...
+<img width="540" height="1052" alt="Diagram1IoT" src="https://github.com/user-attachments/assets/314b1c1c-fa3d-4d51-9de7-1742c7640d50" />
+<img width="1681" height="369" alt="EndToEndFlowIoT" src="https://github.com/user-attachments/assets/ecc37d3e-14d1-493d-9cd7-dc1c6ff58262" />
 
 ---
 
