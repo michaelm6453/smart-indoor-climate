@@ -2,104 +2,102 @@
 import paho.mqtt.client as mqtt
 from influxdb import InfluxDBClient
 import json
-import datetime
+from datetime import datetime, timezone
 
-# Program to subscribe to sensor data and control topics,
-# log sensor readings to InfluxDB, and simulate actuator control.
+# -------------------------
+# Load configuration file
+# -------------------------
+with open("config.json", "r") as f:
+    cfg = json.load(f)
 
-# MQTT broker (on the Pi)
-MQTT_BROKER = "10.0.0.124"
-SENSOR_TOPIC = "lab4_sensor_data"
-CONTROL_TOPIC = "home/climate/control"
+MQTT_CFG = cfg["mqtt"]
+INFLUX_CFG = cfg["influx"]
 
-# InfluxDB (on the VM)
-INFLUX_HOST = "localhost"
-INFLUX_PORT = 8086
-INFLUX_DB   = "climate"
+# -------------------------
+# MQTT configuration
+# -------------------------
+BROKER = MQTT_CFG["broker"]
+PORT = MQTT_CFG["port"]
+TOPIC = MQTT_CFG["topic"]
+USERNAME = MQTT_CFG["username"]
+PASSWORD = MQTT_CFG["password"]
 
-# Set up InfluxDB client
+# -------------------------
+# InfluxDB configuration
+# -------------------------
+INFLUX_HOST = INFLUX_CFG["host"]
+INFLUX_PORT = INFLUX_CFG["port"]
+INFLUX_DB = INFLUX_CFG["database"]
+
+# Connect to InfluxDB
 db = InfluxDBClient(host=INFLUX_HOST, port=INFLUX_PORT)
 db.switch_database(INFLUX_DB)
-
 print("Connected to InfluxDB.")
-
-# Prepare MQTT client up front so we can publish control commands from inside handlers
-client = mqtt.Client()
-
-def log_sensor_reading(temp, humid):
-    """Write one reading into InfluxDB and print it"""
-    now_iso = datetime.datetime.utcnow().isoformat()
-
-    point = [{
-        "measurement": "dht11",
-        "time": now_iso,
-        "fields": {
-            "temp": float(temp),
-            "humid": float(humid)
-        }
-    }]
-
-    db.write_points(point)
-    print(f"Logged: temp={temp} humid={humid} at {now_iso}")
-
-def apply_rules(temp, humid):
-    """Simple automation rules for simulation/demo"""
-    # Example rule: temp too high → fan_on
-    if temp > 28:
-        client.publish(CONTROL_TOPIC, "fan_on")
-        print("Rule: temp > 28 → fan_on")
-
-    # Example rule: temp low → fan_off
-    elif temp < 26:
-        client.publish(CONTROL_TOPIC, "fan_off")
-        print("Rule: temp < 26 → fan_off")
-
-def handle_control_command(cmd):
-    """Fake actuator behavior for now; replace with GPIO later"""
-    print("CONTROL CMD:", cmd)
-
-    if cmd == "fan_on":
-        print("Pretend: FAN ON (would drive GPIO here)")
-    elif cmd == "fan_off":
-        print("Pretend: FAN OFF (would drive GPIO here)")
-    elif cmd == "led_on":
-        print("Pretend: LED ON")
-    elif cmd == "led_off":
-        print("Pretend: LED OFF")
-    else:
-        print("Unknown control command")
 
 def on_connect(client, userdata, flags, rc):
     print("Connected to MQTT broker.")
-    client.subscribe(SENSOR_TOPIC)
-    client.subscribe(CONTROL_TOPIC)
-    print(f"Subscribed to: {SENSOR_TOPIC} and {CONTROL_TOPIC}")
+    client.subscribe(TOPIC, qos=1)
+    print(f"Subscribed to: {TOPIC}")
 
 def on_message(client, userdata, msg):
-    if msg.topic == SENSOR_TOPIC:
-        try:
-            data = json.loads(msg.payload.decode())
-            temp = float(data["temp"])
-            humid = float(data["humid"])
+    try:
+        # Parse incoming JSON from MQTT
+        payload = json.loads(msg.payload.decode())
 
-            # Log reading to InfluxDB
-            log_sensor_reading(temp, humid)
+        temp = float(payload.get("temp", 0))
+        humid = float(payload.get("humid", 0))
+        motion = int(payload.get("motion", 0))
 
-            # Apply simple automation
-            apply_rules(temp, humid)
+        # Use an accurate UTC timestamp
+        now = datetime.now(timezone.utc).isoformat()
 
-        except Exception as e:
-            print("Error handling sensor message:", e)
+        # Write a time-series point into InfluxDB
+        point = [{
+            "measurement": "dht11",
+            "time": now,
+            "fields": {
+                "temp": temp,
+                "humid": humid,
+                "motion": motion
+            }
+        }]
+        db.write_points(point)
 
-    elif msg.topic == CONTROL_TOPIC:
-        cmd = msg.payload.decode()
-        handle_control_command(cmd)
+        print(f"Logged → Temp={temp}°C  Humid={humid}%  Motion={motion}  @ {now}")
 
-# Attach callbacks and connect
+        # ------------------------
+        # Simulated actuator behavior
+        # ------------------------
+        if temp > 28:
+            print("ACTUATOR: Cooling fan ON")
+        elif temp < 20:
+            print("ACTUATOR: Heater ON")
+        else:
+            print("ACTUATOR: Temperature stable")
+
+        if humid < 30:
+            print("ACTUATOR: Humidifier ON")
+        elif humid > 70:
+            print("ACTUATOR: Dehumidifier ON")
+        else:
+            print("ACTUATOR: Humidity normal")
+
+        if motion == 1:
+            print("ACTUATOR: Something moved in the room")
+        else:
+            print("ACTUATOR: No motion detected")
+
+    except Exception as e:
+        print("Error processing message:", e)
+
+# -------------------------
+# Start MQTT client
+# -------------------------
+client = mqtt.Client()
+client.username_pw_set(USERNAME, PASSWORD)
 client.on_connect = on_connect
 client.on_message = on_message
 
-print(f"Connecting to {MQTT_BROKER} ...")
-client.connect(MQTT_BROKER, 1883, 60)
-
+print(f"Connecting to MQTT broker at {BROKER}:{PORT} ...")
+client.connect(BROKER, PORT, 60)
 client.loop_forever()
