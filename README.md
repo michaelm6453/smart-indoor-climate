@@ -31,7 +31,7 @@ Arduino → Pi → MQTT → VM → InfluxDB → Grafana
 1. The Arduino reads temperature and humidity from the DHT11 sensor.  
 2. It sends these readings as JSON over USB serial to the Raspberry Pi.  
 3. The Raspberry Pi publishes the JSON readings to MQTT topic  
-   **`lab4_sensor_data`**.  
+   **`IoT_final_project`**.  
 4. The Ubuntu VM subscribes to this topic, parses the data, and writes it into the **climate** InfluxDB database.
 5. Grafana reads from InfluxDB and displays a real-time dashboard.
 
